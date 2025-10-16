@@ -1,47 +1,37 @@
 import streamlit as st
 import random
-import os
 import base64
+import os
 
-st.set_page_config(page_title="Football Manager: Arsenal", layout="centered")
-
+# ===== Fungsi untuk load logo club =====
 def get_base64_image(image_path):
     if not os.path.exists(image_path):
-        image_path = "logos/default.png"
+        return None
     with open(image_path, "rb") as f:
-        data = f.read()
-    return "data:image/png;base64," + base64.b64encode(f.read()).decode()
+        return "data:image/png;base64," + base64.b64encode(f.read()).decode()
 
+# ===== Path direktori logo =====
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+LOGO_DIR = os.path.join(BASE_DIR, "logos")
+
+# ===== Daftar klub dan logo =====
+clubs = {
+    "Arsenal": {"rating": 85, "logo": get_base64_image(os.path.join(LOGO_DIR, "arsenal.png"))},
+    "Chelsea": {"rating": 83, "logo": get_base64_image(os.path.join(LOGO_DIR, "chelsea.png"))},
+    "Liverpool": {"rating": 86, "logo": get_base64_image(os.path.join(LOGO_DIR, "liverpool.png"))},
+    "Manchester City": {"rating": 89, "logo": get_base64_image(os.path.join(LOGO_DIR, "mancity.png"))},
+    "Manchester United": {"rating": 84, "logo": get_base64_image(os.path.join(LOGO_DIR, "manunited.png"))},
+    "Newcastle United": {"rating": 82, "logo": get_base64_image(os.path.join(LOGO_DIR, "newcastleunited.png"))},
+}
+
+# ===== Daftar pemain Arsenal (contoh) =====
 arsenal_players = [
-    {"name": "David Raya", "pos": "GK", "rating": 85, "price": 30},
-    {"name": "Ben White", "pos": "RB", "rating": 83, "price": 40},
-    {"name": "William Saliba", "pos": "CB", "rating": 87, "price": 70},
-    {"name": "Gabriel Magalhães", "pos": "CB", "rating": 85, "price": 50},
-    {"name": "Oleksandr Zinchenko", "pos": "LB", "rating": 82, "price": 35},
-    {"name": "Declan Rice", "pos": "CDM", "rating": 89, "price": 100},
-    {"name": "Martin Ødegaard", "pos": "CM", "rating": 88, "price": 90},
-    {"name": "Kai Havertz", "pos": "CAM", "rating": 84, "price": 60},
-    {"name": "Bukayo Saka", "pos": "RW", "rating": 89, "price": 110},
-    {"name": "Gabriel Jesus", "pos": "ST", "rating": 85, "price": 75},
-    {"name": "Leandro Trossard", "pos": "LW", "rating": 84, "price": 55},
+    "David Raya (GK)", "Ben White (DF)", "William Saliba (DF)", "Gabriel Magalhães (DF)", "Kieran Tierney (DF)",
+    "Martin Ødegaard (MF)", "Declan Rice (MF)", "Thomas Partey (MF)",
+    "Bukayo Saka (FW)", "Gabriel Jesus (FW)", "Leandro Trossard (FW)"
 ]
 
-transfer_market = [
-    {"name": "Kylian Mbappe", "pos": "ST", "rating": 92, "price": 180},
-    {"name": "Erling Haaland", "pos": "ST", "rating": 93, "price": 200},
-    {"name": "Jude Bellingham", "pos": "CM", "rating": 90, "price": 150},
-    {"name": "Vinicius Jr", "pos": "LW", "rating": 89, "price": 130},
-    {"name": "Pedri", "pos": "CM", "rating": 86, "price": 100},
-]
-
-opponents = [
-    {"name": "Chelsea", "rating": 83, "logo": "logos/chelsea.png"},
-    {"name": "Liverpool", "rating": 86, "logo": "logos/liverpool.png"},
-    {"name": "Manchester City", "rating": 90, "logo": "logos/mancity.png"},
-    {"name": "Manchester United", "rating": 82, "logo": "logos/manunited.png"},
-    {"name": "Newcastle", "rating": 84, "logo": "logos/newcastleunited.png"},
-]
-
+# ===== Fungsi simulasi pertandingan =====
 def simulate_match(team_rating, opponent_rating):
     luck_team = random.uniform(-5, 5)
     luck_opponent = random.uniform(-5, 5)
@@ -49,185 +39,97 @@ def simulate_match(team_rating, opponent_rating):
     score_opponent = max(0, int((opponent_rating + luck_opponent) / 20))
     return score_team, score_opponent
 
+# ===== Inisialisasi state =====
 if "money" not in st.session_state:
     st.session_state.money = 200
-if "squad" not in st.session_state or len(st.session_state.squad) == 0:
+if "squad" not in st.session_state:
     st.session_state.squad = arsenal_players.copy()
 if "stats" not in st.session_state:
     st.session_state.stats = {"W": 0, "D": 0, "L": 0}
 if "last_match" not in st.session_state:
     st.session_state.last_match = None
 
-# ====== CSS ======
+# ===== CSS =====
 st.markdown("""
 <style>
-.stApp {
-    background: linear-gradient(135deg, #fafafa 40%, #f5f0f0);
+body {
+    background-color: #fafafa;
 }
-h1, h2, h3, h4 {
-    color: #db0007;
+h1, h2, h3 {
     text-align: center;
     font-family: 'Poppins', sans-serif;
 }
-.stTabs [data-baseweb="tab-list"] {
-    justify-content: center;
-}
-.stTabs [data-baseweb="tab"] {
-    font-weight: 600;
-    color: #db0007;
-}
-.card {
-    background-color: #fff;
+.team-card {
+    text-align: center;
     border-radius: 15px;
-    padding: 1rem;
-    margin-bottom: 1rem;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-    transition: 0.3s;
+    background: white;
+    padding: 15px;
+    margin: 10px;
+    box-shadow: 0px 3px 10px rgba(0,0,0,0.1);
 }
-.card:hover {
-    transform: scale(1.02);
-    box-shadow: 0 6px 18px rgba(0,0,0,0.15);
-}
-.player-row {
-    display: flex;
-    justify-content: space-between;
-    flex-wrap: wrap;
-}
-.player-row p {
-    margin: 0.3rem 0;
-}
-div.stButton > button {
-    background-color: #db0007;
-    color: white;
-    font-weight: 600;
-    border-radius: 8px;
-}
-div.stButton > button:hover {
-    transform: scale(1.03);
-    background-color: #e01b1b;
-}
-.scoreboard {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-wrap: wrap;
-    background: linear-gradient(135deg, #db0007, #e7c26f);
-    color: white;
-    padding: 1rem;
-    border-radius: 15px;
-    backdrop-filter: blur(8px);
-    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-}
-.scoreboard img {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    margin: 0 1rem;
-    border: 3px solid white;
-}
-.scoreboard h3 {
-    font-size: 2.5rem;
+img {
+    max-width: 90px;
+    height: auto;
 }
 @media (max-width: 768px) {
-    .scoreboard h3 { font-size: 2rem; }
-    .scoreboard img { width: 65px; height: 65px; }
-    .card p { font-size: 0.9rem; }
+    img { max-width: 60px; }
+    h1 { font-size: 22px; }
 }
 </style>
 """, unsafe_allow_html=True)
 
-# ====== Tabs ======
-tabs = st.tabs(["Home", "Squad", "Match"])
+# ===== Judul =====
+st.markdown("<h1>Mini Football Manager</h1>", unsafe_allow_html=True)
 
-# --- HOME ---
-with tabs[0]:
-    arsenal_logo = get_base64_image("logos/arsenal.png")
-    st.markdown(f"<div style='text-align:center;'><img src='{arsenal_logo}' width='120'></div>", unsafe_allow_html=True)
-    st.markdown("### Football Manager Mini: Arsenal Edition ⚽")
-    st.write(f"Dana Klub: **£{st.session_state.money} juta**")
-    st.write(f"Statistik: W {st.session_state.stats['W']} | D {st.session_state.stats['D']} | L {st.session_state.stats['L']}")
+# ===== Sidebar klub pilihan =====
+team_name = st.sidebar.selectbox("Pilih Klub Anda:", list(clubs.keys()))
+team_info = clubs[team_name]
 
-# --- SQUAD ---
-with tabs[1]:
-    st.subheader("Daftar Pemain Arsenal")
-    for p in st.session_state.squad:
-        st.markdown(
-            f"""
-            <div class="card player-row">
-                <p><b>{p['name']}</b> ({p['pos']})</p>
-                <p>Rating: {p['rating']}</p>
-                <p>Harga: £{p['price']}M</p>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+# ===== Tampilkan logo klub =====
+if team_info["logo"]:
+    st.markdown(f"<div style='text-align:center'><img src='{team_info['logo']}'></div>", unsafe_allow_html=True)
 
-    st.subheader("Bursa Transfer")
-    with st.expander("Lihat Daftar Pemain di Bursa Transfer"):
-        for player in transfer_market:
-            col1, col2, col3, col4 = st.columns([3, 2, 2, 2])
-            col1.write(player["name"])
-            col2.write(player["pos"])
-            col3.write(f"Rating {player['rating']}")
-            if col4.button(f"Beli (£{player['price']}M)", key=player["name"]):
-                if st.session_state.money >= player["price"]:
-                    st.session_state.money -= player["price"]
-                    st.session_state.squad.append(player)
-                    st.success(f"{player['name']} berhasil dibeli!")
-                else:
-                    st.error("Uang tidak cukup!")
+# ===== Daftar pemain =====
+st.subheader(f"Daftar Pemain {team_name}")
+if team_name == "Arsenal":
+    for player in arsenal_players:
+        st.markdown(f"- {player}")
+else:
+    st.markdown("_Daftar pemain belum tersedia untuk klub ini._")
 
-# --- MATCH ---
-with tabs[2]:
-    st.header("Simulasi Pertandingan")
+# ===== Simulasi pertandingan =====
+st.divider()
+st.subheader("Simulasi Pertandingan")
 
-    selected_players = st.multiselect(
-        "Pilih 11 pemain untuk starting lineup:",
-        [p["name"] for p in st.session_state.squad],
-    )
+opponent_name = st.selectbox("Pilih Lawan:", [club for club in clubs.keys() if club != team_name])
 
-    opponent = st.selectbox("Pilih lawan:", [o["name"] for o in opponents])
-    opponent_data = next(o for o in opponents if o["name"] == opponent)
+if st.button("Mulai Pertandingan 🎮"):
+    team_rating = clubs[team_name]["rating"]
+    opponent_rating = clubs[opponent_name]["rating"]
 
-    if st.button("Mulai Pertandingan"):
-        if len(selected_players) != 11:
-            st.warning("Pilih tepat 11 pemain untuk memulai pertandingan.")
-        else:
-            lineup = [p for p in st.session_state.squad if p["name"] in selected_players]
-            avg_rating = sum(p["rating"] for p in lineup) / len(lineup)
+    score_team, score_opponent = simulate_match(team_rating, opponent_rating)
+    st.session_state.last_match = (team_name, opponent_name, score_team, score_opponent)
 
-            score_team, score_opponent = simulate_match(avg_rating, opponent_data["rating"])
-            st.session_state.last_match = {
-                "opponent": opponent,
-                "score_team": score_team,
-                "score_opponent": score_opponent,
-                "logo": opponent_data["logo"]
-            }
+    if score_team > score_opponent:
+        st.session_state.stats["W"] += 1
+        result = "Menang "
+    elif score_team < score_opponent:
+        st.session_state.stats["L"] += 1
+        result = "Kalah "
+    else:
+        st.session_state.stats["D"] += 1
+        result = "Seri "
 
-            if score_team > score_opponent:
-                st.session_state.stats["W"] += 1
-                st.session_state.money += 20
-                st.success("Kemenangan! Arsenal tampil luar biasa!")
-                st.balloons()
-            elif score_team == score_opponent:
-                st.session_state.stats["D"] += 1
-                st.info("Hasil imbang, pertandingan berjalan ketat.")
-            else:
-                st.session_state.stats["L"] += 1
-                st.error("Kekalahan! Arsenal perlu evaluasi.")
+    st.success(f"Hasil: {team_name} {score_team} - {score_opponent} {opponent_name}")
+    st.info(f"Hasil pertandingan: {result}")
 
-    if st.session_state.last_match:
-        lm = st.session_state.last_match
-        st.markdown(
-            f"""
-            <div class='scoreboard'>
-                <div><img src='{arsenal_logo}'><p><b>Arsenal</b></p></div>
-                <h3>{lm['score_team']} - {lm['score_opponent']}</h3>
-                <div><img src='{get_base64_image(lm['logo'])}'><p><b>{lm['opponent']}</b></p></div>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+# ===== Statistik =====
+st.divider()
+st.subheader("Statistik Musim Ini")
+stats = st.session_state.stats
+st.markdown(f"**Menang:** {stats['W']} | **Seri:** {stats['D']} | **Kalah:** {stats['L']}")
 
-st.markdown("---")
-st.caption("Created by Khai | iseng")
+# ===== Informasi terakhir =====
+if st.session_state.last_match:
+    team, opponent, s1, s2 = st.session_state.last_match
+    st.caption(f"Pertandingan terakhir: {team} {s1}-{s2} {opponent}")
