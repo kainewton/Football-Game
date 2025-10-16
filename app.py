@@ -108,39 +108,58 @@ with tabs[2]:
         [p["name"] for p in st.session_state.squad],
     )
 
-    if len(selected_players) == 11:
-        lineup = [p for p in st.session_state.squad if p["name"] in selected_players]
-        avg_rating = sum(p["rating"] for p in lineup) / 11
-        opponent = st.selectbox("Pilih lawan:", [o["name"] for o in opponents])
-        opponent_data = next(o for o in opponents if o["name"] == opponent)
+    opponent = st.selectbox("Pilih lawan:", [o["name"] for o in opponents])
+    opponent_data = next(o for o in opponents if o["name"] == opponent)
 
-        if st.button("Mulai Pertandingan"):
+    if "last_match" not in st.session_state:
+        st.session_state.last_match = None
+        
+    if st.button("Mulai Pertandingan"):
+        if len(selected_players) != 11:
+            st.warning("Pilih tepat 11 pemain untuk memulai pertandingan.")
+        else:
+            lineup = [p for p in st.session_state.squad if p["name"] in selected_players]
+            avg_rating = sum(p["rating"] for p in lineup) / len(lineup)
+
             score_team, score_opponent = simulate_match(avg_rating, opponent_data["rating"])
 
-    # Layout dua kolom
-    col1, col2, col3 = st.columns([2, 1, 2])
-    with col1:
-        st.image("logos/arsenal.png", width=120)
-        st.markdown("<h4 style='text-align: center;'>Arsenal</h4>", unsafe_allow_html=True)
-    with col2:
-        st.markdown(f"<h3 style='text-align: center;'>{score_team} - {score_opponent}</h3>", unsafe_allow_html=True)
-    with col3:
-        st.image(opponent_data["logo"], width=120)
-        st.markdown(f"<h4 style='text-align: center;'>{opponent_data['name']}</h4>", unsafe_allow_html=True)
+            st.session_state.last_match = {
+                "opponent": opponent_data["name"],
+                "opponent_logo": opponent_data.get("logo", None),
+                "score_team": score_team,
+                "score_opponent": score_opponent
+            }
 
-    st.markdown("---")
+            if score_team > score_opponent:
+                st.session_state.stats["W"] += 1
+                st.session_state.money += 20
+                st.balloons()
+            elif score_team == score_opponent:
+                st.session_state.stats["D"] += 1
+            else:
+                st.session_state.stats["L"] += 1
 
-    if score_team > score_opponent:
-        st.success("Kemenangan untuk Arsenal!")
-        st.session_state.stats["W"] += 1
-        st.session_state.money += 20
-        st.balloons()
-    elif score_team == score_opponent:
-        st.info("Hasil imbang.")
-        st.session_state.stats["D"] += 1
-    else:
-        st.error("Kekalahan.")
-        st.session_state.stats["L"] += 1
+    if st.session_state.last_match:
+        lm = st.session_state.last_match
+        # layout dua kolom
+        col1, col2, col3 = st.columns([2, 1, 2])
+        with col1:
+            try:
+                st.image("logos/arsenal.png", width=120)
+            except Exception:
+                st.write("Arsenal")
+        with col2:
+            st.markdown(f"<h3 style='text-align: center;'>{lm['score_team']} - {lm['score_opponent']}</h3>", unsafe_allow_html=True)
+        with col3:
+            if lm["opponent_logo"]:
+                try:
+                    st.image(lm["opponent_logo"], width=120)
+                except Exception:
+                    st.write(lm["opponent"])
+            else:
+                st.write(lm["opponent"])
+
+        st.markdown("---")
 
 # ====== CLUB INFO ======
 with tabs[3]:
