@@ -111,10 +111,8 @@ else:
         st.session_state.managed_club = None
         st.rerun()
 
-# ===== TAB =====
 tabs = st.tabs(["Club", "Match", "Transfer", "Stats"])
 
-# ===== CLUB TAB =====
 with tabs[0]:
     club = st.session_state.managed_club
     if club:
@@ -128,7 +126,7 @@ with tabs[0]:
     else:
         st.info("Pilih klub dulu di sidebar.")
 
-# ===== MATCH TAB =====
+# ===== match =====
 with tabs[1]:
     club = st.session_state.managed_club
     if club:
@@ -160,7 +158,6 @@ with tabs[1]:
     else:
         st.info("Pilih klub dulu di sidebar.")
 
-# ===== TRANSFER TAB =====
 with tabs[2]:
     club = st.session_state.managed_club
     if club:
@@ -180,7 +177,6 @@ with tabs[2]:
     else:
         st.info("Pilih klub dulu di sidebar.")
 
-# ===== STATS TAB =====
 with tabs[3]:
     st.subheader("Klasemen Sementara")
     sorted_points = sorted(st.session_state.points.items(), key=lambda x: x[1], reverse=True)
