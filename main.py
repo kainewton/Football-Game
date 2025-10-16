@@ -44,7 +44,7 @@ def simulate_match(team_rating, opponent_rating):
 
 # ====== streamlit App ======
 st.set_page_config(page_title="Football Manager Mini", layout="centered")
-st.title("Football Manager Mini: Arsenal Edition (v2.1)")
+st.title("Football Manager Mini: Arsenal Edition Wkwkwkw")
 
 # session state 
 if "money" not in st.session_state:
