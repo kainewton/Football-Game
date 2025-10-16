@@ -164,20 +164,24 @@ with tabs[1]:
 
     if st.session_state.last_match:
         lm = st.session_state.last_match
-        st.markdown(
-            f"""
-            <div style="display:flex;align-items:center;justify-content:center;gap:16px;margin-top:12px;">
-                <div style="text-align:center;">
-                    <img src="{lm['team_logo']}" width="80"><br><b>{lm['team']}</b>
-                </div>
-                <div style="font-size:28px;"><b>{lm['score_team']} - {lm['score_opponent']}</b></div>
-                <div style="text-align:center;">
-                    <img src="{lm['opponent_logo']}" width="80"><br><b>{lm['opponent']}</b>
-                </div>
+
+    team_logo = lm.get("team_logo") or get_base64_image(os.path.join(LOGO_DIR, "default.png"))
+    opponent_logo = lm.get("opponent_logo") or get_base64_image(os.path.join(LOGO_DIR, "default.png"))
+
+    st.markdown(
+        f"""
+        <div class="scoreboard" style="margin-top:12px;">
+            <div style="text-align:center;">
+                <img src="{team_logo}" width="80"><br><b>{lm['team']}</b>
             </div>
-            """,
-            unsafe_allow_html=True,
-        )
+            <div style="text-align:center;"><h2>{lm['score_team']} - {lm['score_opponent']}</h2></div>
+            <div style="text-align:center;">
+                <img src="{opponent_logo}" width="80"><br><b>{lm['opponent']}</b>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 # ==== TAB 3: TRANSFER ====
 with tabs[2]:
