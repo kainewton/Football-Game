@@ -1,7 +1,16 @@
 import streamlit as st
 import random
+import os
+import base64
 
 st.set_page_config(page_title="Football Manager: Arsenal", layout="centered")
+
+def get_base64_image(image_path):
+    if not os.path.exists(image_path):
+        image_path = "logos/default.png"
+    with open(image_path, "rb") as f:
+        data = f.read()
+    return "data:image/png;base64," + base64.b64encode(f.read()).decode()
 
 arsenal_players = [
     {"name": "David Raya", "pos": "GK", "rating": 85, "price": 30},
@@ -33,7 +42,6 @@ opponents = [
     {"name": "Newcastle", "rating": 84, "logo": "logos/newcastleunited.png"},
 ]
 
-# ====== Fungsi simulasi pertandingan ======
 def simulate_match(team_rating, opponent_rating):
     luck_team = random.uniform(-5, 5)
     luck_opponent = random.uniform(-5, 5)
@@ -41,10 +49,9 @@ def simulate_match(team_rating, opponent_rating):
     score_opponent = max(0, int((opponent_rating + luck_opponent) / 20))
     return score_team, score_opponent
 
-# ====== State ======
 if "money" not in st.session_state:
     st.session_state.money = 200
-if "squad" not in st.session_state:
+if "squad" not in st.session_state or len(st.session_state.squad) == 0:
     st.session_state.squad = arsenal_players.copy()
 if "stats" not in st.session_state:
     st.session_state.stats = {"W": 0, "D": 0, "L": 0}
@@ -54,8 +61,8 @@ if "last_match" not in st.session_state:
 # ====== CSS ======
 st.markdown("""
 <style>
-body {
-    background-color: #fafafa;
+.stApp {
+    background: linear-gradient(135deg, #fafafa 40%, #f5f0f0);
 }
 h1, h2, h3, h4 {
     color: #db0007;
@@ -75,6 +82,11 @@ h1, h2, h3, h4 {
     padding: 1rem;
     margin-bottom: 1rem;
     box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    transition: 0.3s;
+}
+.card:hover {
+    transform: scale(1.02);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.15);
 }
 .player-row {
     display: flex;
@@ -84,11 +96,15 @@ h1, h2, h3, h4 {
 .player-row p {
     margin: 0.3rem 0;
 }
-button {
-    transition: 0.3s;
+div.stButton > button {
+    background-color: #db0007;
+    color: white;
+    font-weight: 600;
+    border-radius: 8px;
 }
 div.stButton > button:hover {
     transform: scale(1.03);
+    background-color: #e01b1b;
 }
 .scoreboard {
     display: flex;
@@ -99,6 +115,8 @@ div.stButton > button:hover {
     color: white;
     padding: 1rem;
     border-radius: 15px;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
 }
 .scoreboard img {
     width: 80px;
@@ -110,20 +128,22 @@ div.stButton > button:hover {
 .scoreboard h3 {
     font-size: 2.5rem;
 }
-@media (max-width: 600px) {
+@media (max-width: 768px) {
     .scoreboard h3 { font-size: 2rem; }
     .scoreboard img { width: 65px; height: 65px; }
+    .card p { font-size: 0.9rem; }
 }
 </style>
 """, unsafe_allow_html=True)
 
-# ====== Layout Tabs ======
+# ====== Tabs ======
 tabs = st.tabs(["Home", "Squad", "Match"])
 
 # --- HOME ---
 with tabs[0]:
-    st.image("logos/arsenal.png", width=120)
-    st.markdown("### Football Manager Mini: Arsenal Edition")
+    arsenal_logo = get_base64_image("logos/arsenal.png")
+    st.markdown(f"<div style='text-align:center;'><img src='{arsenal_logo}' width='120'></div>", unsafe_allow_html=True)
+    st.markdown("### Football Manager Mini: Arsenal Edition ⚽")
     st.write(f"Dana Klub: **£{st.session_state.money} juta**")
     st.write(f"Statistik: W {st.session_state.stats['W']} | D {st.session_state.stats['D']} | L {st.session_state.stats['L']}")
 
@@ -131,17 +151,16 @@ with tabs[0]:
 with tabs[1]:
     st.subheader("Daftar Pemain Arsenal")
     for p in st.session_state.squad:
-        with st.container():
-            st.markdown(
-                f"""
-                <div class="card player-row">
-                    <p><b>{p['name']}</b> ({p['pos']})</p>
-                    <p>Rating: {p['rating']}</p>
-                    <p>Harga: £{p['price']}M</p>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
+        st.markdown(
+            f"""
+            <div class="card player-row">
+                <p><b>{p['name']}</b> ({p['pos']})</p>
+                <p>Rating: {p['rating']}</p>
+                <p>Harga: £{p['price']}M</p>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 
     st.subheader("Bursa Transfer")
     with st.expander("Lihat Daftar Pemain di Bursa Transfer"):
@@ -160,7 +179,7 @@ with tabs[1]:
 
 # --- MATCH ---
 with tabs[2]:
-    st.header("⚽ Simulasi Pertandingan")
+    st.header("Simulasi Pertandingan")
 
     selected_players = st.multiselect(
         "Pilih 11 pemain untuk starting lineup:",
@@ -202,13 +221,13 @@ with tabs[2]:
         st.markdown(
             f"""
             <div class='scoreboard'>
-                <div><img src='logos/arsenal.png'><p><b>Arsenal</b></p></div>
+                <div><img src='{arsenal_logo}'><p><b>Arsenal</b></p></div>
                 <h3>{lm['score_team']} - {lm['score_opponent']}</h3>
-                <div><img src='{lm['logo']}'><p><b>{lm['opponent']}</b></p></div>
+                <div><img src='{get_base64_image(lm['logo'])}'><p><b>{lm['opponent']}</b></p></div>
             </div>
             """,
             unsafe_allow_html=True
         )
 
 st.markdown("---")
-st.caption("Created by Khai| iseng")
+st.caption("Created by Khai | iseng")
