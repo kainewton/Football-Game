@@ -104,12 +104,12 @@ if st.session_state.managed_club is None:
     club_choice = st.sidebar.selectbox("Pilih klub yang ingin kamu kelola:", list(clubs.keys()))
     if st.sidebar.button("Mulai Kelola Klub"):
         st.session_state.managed_club = club_choice
-        st.experimental_rerun()
+        st.rerun()
 else:
     st.sidebar.success(f"Kamu sekarang mengelola {st.session_state.managed_club}")
     if st.sidebar.button("Ganti Klub"):
         st.session_state.managed_club = None
-        st.experimental_rerun()
+        st.rerun()
 
 # ===== TAB =====
 tabs = st.tabs(["Club", "Match", "Transfer", "Stats"])
