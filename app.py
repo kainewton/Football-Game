@@ -89,11 +89,14 @@ if "last_match" not in st.session_state:
 # ======= Sidebar =======
 with st.sidebar:
     st.header("Manager Controls")
-    st.session_state.managed_club = st.selectbox(
-        "Pilih klub yang dikelola:",
-        list(clubs.keys()),
-        index=list(clubs.keys()).index(st.session_state.managed_club),
-    )
+    club_keys = list(clubs.keys())
+
+    default_index = 0
+    if st.session_state.get("managed_club") in club_keys:
+        default_index = club_keys.index(st.session_state["managed_club"])
+    managed = st.selectbox("Pilih klub yang dikelola:", club_keys, index=default_index)
+    st.session_state.managed_club = managed
+
     st.markdown("---")
     st.markdown(f"**Dana klub:** £{st.session_state.money}M")
     st.markdown(f"**Statistik:** W {st.session_state.stats['W']} | D {st.session_state.stats['D']} | L {st.session_state.stats['L']}")
