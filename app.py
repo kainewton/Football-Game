@@ -109,7 +109,6 @@ clubs = {
     },
 }
 
-# Pre-calc avg ratings
 for club_name in clubs:
     update_avg_rating(club_name)
 
@@ -129,26 +128,23 @@ if "lineup" not in st.session_state:
 if "matches" not in st.session_state:
     st.session_state.matches = []  # history of matches
 
-# ---------- UI: Sidebar ----------
-st.sidebar.title("Mini Football Manager v2")
+st.sidebar.title("Mini Football Manager")
 if st.session_state.managed_club is None:
     club_choice = st.sidebar.selectbox("Pilih klub yang ingin kamu kelola:", list(clubs.keys()))
     if st.sidebar.button("Mulai Kelola Klub"):
         st.session_state.managed_club = club_choice
-        # experimentally rerun once to show managed state
-        st.experimental_rerun()
+        st.rerun()
 else:
     st.sidebar.success(f"Kamu sekarang mengelola {st.session_state.managed_club}")
     if st.sidebar.button("Ganti Klub"):
         st.session_state.managed_club = None
-        st.experimental_rerun()
+        st.rerun()
 
 st.sidebar.divider()
 st.sidebar.markdown("**Budget klub saat ini:**")
 if st.session_state.managed_club:
     st.sidebar.write(f"£{st.session_state.money[st.session_state.managed_club]}M")
 
-# ---------- Tabs ----------
 tabs = st.tabs(["Club", "Match", "Transfer", "Stats", "Tactics", "Dashboard"])
 
 # ---------- Tab: Club ----------
@@ -178,7 +174,6 @@ with tabs[1]:
         st.session_state.formation[club] = form
 
         st.write("**Pilih lineup (opsional):**")
-        # Rough position templates per formation
         formation_positions = {
             "4-3-3": ["GK", "RB", "CB1", "CB2", "LB", "CM1", "CM2", "CM3", "RW", "ST", "LW"],
             "4-2-3-1": ["GK", "RB", "CB1", "CB2", "LB", "CDM1", "CDM2", "RM", "CAM", "LM", "ST"],
@@ -196,23 +191,19 @@ with tabs[1]:
         if st.button("Mainkan Pertandingan"):
             team_rating = clubs[club]["avg_rating"]
             opponent_rating = clubs[opponent]["avg_rating"]
-            # base random scores influenced by rating difference
             score_team = random.randint(0, 3)
             score_opp = random.randint(0, 3)
 
-            # small bonus based on rating
             if team_rating > opponent_rating:
                 score_team += random.choice([0, 0, 1])
             elif opponent_rating > team_rating:
                 score_opp += random.choice([0, 0, 1])
 
-            # determine scorers and assist makers
             def pick_scorers(sc, club_name):
                 scorers = []
                 if sc <= 0:
                     return scorers
                 available = [p["name"] for p in clubs[club_name]["players"]]
-                # prefer forwards & wingers
                 forwards = [p["name"] for p in clubs[club_name]["players"] if p["pos"] in ("ST", "LW", "RW", "CAM")]
                 for _ in range(sc):
                     if forwards and random.random() < 0.7:
@@ -380,7 +371,7 @@ with tabs[4]:
 
         st.divider()
         st.write("**Formasi visual (sederhana)**")
-        st.markdown("_(Ini hanya representasi teks, untuk visual lebih bagus kita bisa menambahkan gambar/plot)_")
+        st.markdown("hehe masih nyoba")
         pos_map = {
             "4-3-3": "GK\nLB CB CB RB\nCM CM CM\nLW ST RW",
             "4-2-3-1": "GK\nLB CB CB RB\nCDM CDM\nLM CAM RM\nST",
